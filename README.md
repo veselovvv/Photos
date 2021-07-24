@@ -5,4 +5,4 @@
 ![2](https://user-images.githubusercontent.com/76612421/126870058-368244b6-763d-4f47-a239-72dfeb53f5a2.PNG)
 
 # Getting Started
-The first thing you need to do is to get key here - https://www.flickr.com/services/api/ (press "Api Keys"). After that you need to input your key in const KEY in FlickrApi.kt. Now you can launch the app.
+The first thing you need to do is to get key here - https://www.flickr.com/services/api/ (press "Api Keys"). After that you need to input your key in const KEY in FlickrApi.kt (package "api"). Now you can launch the app.
