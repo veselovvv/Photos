@@ -14,15 +14,16 @@ import java.util.concurrent.ConcurrentHashMap
 private const val TAG = "ThumbnailDownloader"
 private const val MESSAGE_DOWNLOAD = 0
 
-class ThumbnailDownloader<in T>(private val responseHandler: Handler,
-    private val onThumbnailDownloaded: (T, Bitmap) -> Unit) : HandlerThread(TAG) {
+class ThumbnailDownloader<in T>(
+    private val responseHandler: Handler,
+    private val onThumbnailDownloaded: (T, Bitmap) -> Unit
+) : HandlerThread(TAG) {
 
     // Наблюдатель за жизненным циклом фрагмента:
     val fragmentLifecycleObserver: LifecycleObserver = object : LifecycleObserver {
 
         @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
         fun setup() {
-            Log.i(TAG, "Background thread is starting")
             // Запуск потока:
             start()
             looper
@@ -30,7 +31,6 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler,
 
         @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         fun tearDown() {
-            Log.i(TAG, "Background thread is destroying")
             // Остановка потока:
             quit()
         }
@@ -55,7 +55,6 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler,
     @SuppressLint("HandlerLeak") // убирает предупреждение HandlerLeak
     override fun onLooperPrepared() {
         requestHandler = object : Handler() {
-
             override fun handleMessage(message: Message) {
                 if (message.what == MESSAGE_DOWNLOAD) {
                     val target = message.obj as T
