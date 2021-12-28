@@ -2,7 +2,6 @@ package com.veselovvv.photos
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -37,9 +36,7 @@ class FlickrFetchr {
         // Выполнение веб-запроса, содержащегося в объекте Call:
         flickrRequest.enqueue(object : Callback<FlickrResponse> {
 
-            override fun onFailure(call: Call<FlickrResponse>, t: Throwable) {
-                Log.e("FlickrFetchr", "Photos fetching is failed", t)
-            }
+            override fun onFailure(call: Call<FlickrResponse>, t: Throwable) {}
 
             override fun onResponse(call: Call<FlickrResponse>, response: Response<FlickrResponse>) {
 
