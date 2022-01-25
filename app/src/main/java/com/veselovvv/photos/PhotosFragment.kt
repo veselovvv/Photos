@@ -80,12 +80,10 @@ class PhotosFragment : Fragment() {
 
     private inner class PhotoHolder(private val imageView: ImageView)
         : RecyclerView.ViewHolder(imageView) {
-
         val bindDrawable: (Drawable) -> Unit = imageView::setImageDrawable
     }
 
     private inner class PhotoAdapter(private val photos: List<Photo>) : RecyclerView.Adapter<PhotoHolder>() {
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoHolder {
             val view = layoutInflater.inflate(R.layout.list_photo, parent, false) as ImageView
             return PhotoHolder(view)
