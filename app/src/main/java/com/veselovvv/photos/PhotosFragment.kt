@@ -11,24 +11,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class PhotosFragment : Fragment() {
-
     private lateinit var photosViewModel: PhotosViewModel
     private lateinit var thumbnailDownloader: ThumbnailDownloader<PhotoHolder>
     private lateinit var photoRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Сохранение PhotosFragment:
-        retainInstance = true
-
-        // Ссылка на ViewModel:
+        retainInstance = true // сохранение PhotosFragment
         photosViewModel = ViewModelProviders.of(this).get(PhotosViewModel::class.java)
 
         val responseHandler = Handler()
@@ -51,19 +45,17 @@ class PhotosFragment : Fragment() {
         viewLifecycleOwner.lifecycle.addObserver(thumbnailDownloader.viewLifecycleObserver)
 
         val view = inflater.inflate(R.layout.fragment_photos, container, false)
-
         photoRecyclerView = view.findViewById(R.id.photo_recycler_view)
         photoRecyclerView.layoutManager = GridLayoutManager(context, 2)
-
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        photosViewModel.photoLiveData.observe(viewLifecycleOwner, Observer { photos ->
+        photosViewModel.photoLiveData.observe(viewLifecycleOwner) { photos ->
             photoRecyclerView.adapter = PhotoAdapter(photos)
-        })
+        }
     }
 
     override fun onDestroyView() {
@@ -84,20 +76,18 @@ class PhotosFragment : Fragment() {
     }
 
     private inner class PhotoAdapter(private val photos: List<Photo>) : RecyclerView.Adapter<PhotoHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoHolder {
-            val view = layoutInflater.inflate(R.layout.list_photo, parent, false) as ImageView
-            return PhotoHolder(view)
-        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = PhotoHolder(
+            layoutInflater.inflate(R.layout.list_photo, parent, false) as ImageView
+        )
 
         override fun getItemCount(): Int = photos.size
 
         override fun onBindViewHolder(holder: PhotoHolder, position: Int) {
             val photo = photos[position]
-            val placeHolder: Drawable = ContextCompat.getDrawable(requireContext(), R.drawable.image)
-                ?: ColorDrawable()
+            val placeHolder: Drawable =
+                ContextCompat.getDrawable(requireContext(), R.drawable.image) ?: ColorDrawable()
 
             holder.bindDrawable(placeHolder)
-
             // Передача целевой папки PhotoHolder, где будет размещено изображение и URL-адреса Photo для скачивания:
             thumbnailDownloader.queueThumbnail(holder, photo.url)
         }

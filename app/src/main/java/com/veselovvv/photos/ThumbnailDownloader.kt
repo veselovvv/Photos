@@ -10,32 +10,24 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import java.util.concurrent.ConcurrentHashMap
 
-private const val TAG = "ThumbnailDownloader"
-private const val MESSAGE_DOWNLOAD = 0
-
 class ThumbnailDownloader<in T>(
     private val responseHandler: Handler,
     private val onThumbnailDownloaded: (T, Bitmap) -> Unit
 ) : HandlerThread(TAG) {
-
     // Наблюдатель за жизненным циклом фрагмента:
-    val fragmentLifecycleObserver: LifecycleObserver = object : LifecycleObserver {
+    val fragmentLifecycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
         fun setup() {
-            // Запуск потока:
-            start()
+            start() // запуск потока:
             looper
         }
 
         @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun tearDown() {
-            // Остановка потока:
-            quit()
-        }
+        fun tearDown() = quit() // остановка потока:
     }
 
     // Наблюдатель жизненного цикла представления:
-    val viewLifecycleObserver: LifecycleObserver = object : LifecycleObserver {
+    val viewLifecycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         fun clearQueue() {
             requestHandler.removeMessages(MESSAGE_DOWNLOAD)
@@ -78,12 +70,14 @@ class ThumbnailDownloader<in T>(
 
         // Запись Runnable в очередь основного потока:
         responseHandler.post(Runnable {
-            if (requestMap[target] != url || hasQuit) {
-                return@Runnable
-            }
-
+            if (requestMap[target] != url || hasQuit) return@Runnable
             requestMap.remove(target)
             onThumbnailDownloaded(target, bitmap)
         })
+    }
+
+    companion object {
+        private const val TAG = "ThumbnailDownloader"
+        private const val MESSAGE_DOWNLOAD = 0
     }
 }

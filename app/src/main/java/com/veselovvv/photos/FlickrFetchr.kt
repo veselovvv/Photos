@@ -28,13 +28,12 @@ class FlickrFetchr {
     }
 
     fun fetchImages(): LiveData<List<Photo>> {
-
         val responseLiveData: MutableLiveData<List<Photo>> = MutableLiveData()
-        val flickrRequest: Call<FlickrResponse> = flickrApi.fetchImages()
+        val flickrRequest = flickrApi.fetchImages()
 
         // Выполнение веб-запроса, содержащегося в объекте Call:
         flickrRequest.enqueue(object : Callback<FlickrResponse> {
-            override fun onFailure(call: Call<FlickrResponse>, t: Throwable) {}
+            override fun onFailure(call: Call<FlickrResponse>, t: Throwable) = Unit
             override fun onResponse(call: Call<FlickrResponse>, response: Response<FlickrResponse>) {
                 val flickrResponse: FlickrResponse? = response.body()
                 val photoResponse: PhotoResponse? = flickrResponse?.photos
@@ -43,19 +42,15 @@ class FlickrFetchr {
                 photos = photos.filterNot {
                     it.url.isBlank()
                 }
-
                 responseLiveData.value = photos
             }
         })
-
         return responseLiveData
     }
 
     @WorkerThread
     fun fetchImage(url: String): Bitmap? {
         val response: Response<ResponseBody> = flickrApi.fetchUrlBytes(url).execute()
-        val bitmap = response.body()?.byteStream()?.use(BitmapFactory::decodeStream)
-
-        return bitmap
+        return response.body()?.byteStream()?.use(BitmapFactory::decodeStream)
     }
 }
