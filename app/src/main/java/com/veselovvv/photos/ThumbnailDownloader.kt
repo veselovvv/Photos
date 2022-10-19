@@ -13,32 +13,10 @@ import java.util.concurrent.ConcurrentHashMap
 class ThumbnailDownloader<in T>(
     private val responseHandler: Handler,
     private val onThumbnailDownloaded: (T, Bitmap) -> Unit
-) : HandlerThread(TAG) {
-    // Наблюдатель за жизненным циклом фрагмента:
-    val fragmentLifecycleObserver = object : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        fun setup() {
-            start() // запуск потока:
-            looper
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun tearDown() = quit() // остановка потока:
-    }
-
-    // Наблюдатель жизненного цикла представления:
-    val viewLifecycleObserver = object : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun clearQueue() {
-            requestHandler.removeMessages(MESSAGE_DOWNLOAD)
-            requestMap.clear()
-        }
-    }
-
+) : HandlerThread(TAG), RequestHandler<T> {
     private var hasQuit = false
     private val requestMap = ConcurrentHashMap<T, String>()
     private lateinit var requestHandler: Handler
-    private val flickrFetchr = FlickrFetchr()
 
     @Suppress("UNCHECKED_CAST") // сообщает Lint о приведении к типу T без проверки
     @SuppressLint("HandlerLeak") // убирает предупреждение HandlerLeak
@@ -58,15 +36,9 @@ class ThumbnailDownloader<in T>(
         return super.quit()
     }
 
-    fun queueThumbnail(target: T, url: String) {
-        requestMap[target] = url
-        // Постановка нового сообщения в очередь сообщений фонового потока:
-        requestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget()
-    }
-
-    private fun handleRequest(target: T) {
+    override fun handleRequest(target: T) {
         val url = requestMap[target] ?: return
-        val bitmap = flickrFetchr.fetchImage(url) ?: return
+        val bitmap = FlickrFetchr().fetchImage(url) ?: return
 
         // Запись Runnable в очередь основного потока:
         responseHandler.post(Runnable {
@@ -74,6 +46,33 @@ class ThumbnailDownloader<in T>(
             requestMap.remove(target)
             onThumbnailDownloaded(target, bitmap)
         })
+    }
+
+    // Наблюдатель за жизненным циклом фрагмента:
+    fun fragmentLifecycleObserver() = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        fun setup() {
+            start() // запуск потока
+            looper
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun tearDown() = quit() // остановка потока
+    }
+
+    // Наблюдатель жизненного цикла представления:
+    fun viewLifecycleObserver() = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun clearQueue() {
+            requestHandler.removeMessages(MESSAGE_DOWNLOAD)
+            requestMap.clear()
+        }
+    }
+
+    fun queueThumbnail(target: T, url: String) {
+        requestMap[target] = url
+        // Постановка нового сообщения в очередь сообщений фонового потока:
+        requestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget()
     }
 
     companion object {

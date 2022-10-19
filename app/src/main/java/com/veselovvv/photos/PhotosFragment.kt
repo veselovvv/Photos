@@ -25,15 +25,13 @@ class PhotosFragment : Fragment() {
         retainInstance = true // сохранение PhotosFragment
         photosViewModel = ViewModelProviders.of(this).get(PhotosViewModel::class.java)
 
-        val responseHandler = Handler()
-
-        thumbnailDownloader = ThumbnailDownloader(responseHandler) { photoHolder, bitmap ->
+        thumbnailDownloader = ThumbnailDownloader(Handler()) { photoHolder, bitmap ->
             val drawable = BitmapDrawable(resources, bitmap)
             photoHolder.bindDrawable(drawable)
         }
 
         // Подписка thumbnailDownloader на получение обратных вызовов жизненного цикла из PhotosFragment:
-        lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
+        lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver())
     }
 
     override fun onCreateView(
@@ -42,7 +40,7 @@ class PhotosFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         // Регистрация наблюдателя жизненного цикла представления:
-        viewLifecycleOwner.lifecycle.addObserver(thumbnailDownloader.viewLifecycleObserver)
+        viewLifecycleOwner.lifecycle.addObserver(thumbnailDownloader.viewLifecycleObserver())
 
         val view = inflater.inflate(R.layout.fragment_photos, container, false)
         photoRecyclerView = view.findViewById(R.id.photo_recycler_view)
@@ -53,7 +51,7 @@ class PhotosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        photosViewModel.photoLiveData.observe(viewLifecycleOwner) { photos ->
+        photosViewModel.observe(viewLifecycleOwner) { photos ->
             photoRecyclerView.adapter = PhotoAdapter(photos)
         }
     }
@@ -61,36 +59,35 @@ class PhotosFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         // Отказ от регистрации наблюдателя жизненного цикла представления:
-        viewLifecycleOwner.lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver)
+        viewLifecycleOwner.lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver())
     }
 
     override fun onDestroy() {
         super.onDestroy()
         // Отписка thumbnailDownloader от получения обратных вызовов жизненного цикла из PhotosFragment:
-        lifecycle.removeObserver(thumbnailDownloader.fragmentLifecycleObserver)
+        lifecycle.removeObserver(thumbnailDownloader.fragmentLifecycleObserver())
     }
 
-    private inner class PhotoHolder(private val imageView: ImageView)
-        : RecyclerView.ViewHolder(imageView) {
-        val bindDrawable: (Drawable) -> Unit = imageView::setImageDrawable
+    private inner class PhotoHolder(
+        private val imageView: ImageView
+    ) : RecyclerView.ViewHolder(imageView) {
+        fun bindDrawable(drawable: Drawable) = imageView.setImageDrawable(drawable)
     }
 
-    private inner class PhotoAdapter(private val photos: List<Photo>) : RecyclerView.Adapter<PhotoHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = PhotoHolder(
-            layoutInflater.inflate(R.layout.list_photo, parent, false) as ImageView
-        )
-
-        override fun getItemCount(): Int = photos.size
+    private inner class PhotoAdapter(
+        private val photos: List<Photo>
+    ) : RecyclerView.Adapter<PhotoHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            PhotoHolder(layoutInflater.inflate(R.layout.list_photo, parent, false) as ImageView)
 
         override fun onBindViewHolder(holder: PhotoHolder, position: Int) {
-            val photo = photos[position]
-            val placeHolder: Drawable =
-                ContextCompat.getDrawable(requireContext(), R.drawable.image) ?: ColorDrawable()
-
+            val placeHolder = ContextCompat.getDrawable(requireContext(), R.drawable.image) ?: ColorDrawable()
             holder.bindDrawable(placeHolder)
             // Передача целевой папки PhotoHolder, где будет размещено изображение и URL-адреса Photo для скачивания:
-            thumbnailDownloader.queueThumbnail(holder, photo.url)
+            thumbnailDownloader.queueThumbnail(holder, photos[position].url)
         }
+
+        override fun getItemCount() = photos.size
     }
 
     companion object {

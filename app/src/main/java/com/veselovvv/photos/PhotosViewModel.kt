@@ -1,12 +1,12 @@
 package com.veselovvv.photos
 
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 
 class PhotosViewModel : ViewModel() {
-    val photoLiveData: LiveData<List<Photo>>
+    private val photoLiveData = FlickrFetchr().fetchImages()
 
-    init {
-        photoLiveData = FlickrFetchr().fetchImages()
-    }
+    fun observe(owner: LifecycleOwner, observer: Observer<List<Photo>>) =
+        photoLiveData.observe(owner, observer)
 }
