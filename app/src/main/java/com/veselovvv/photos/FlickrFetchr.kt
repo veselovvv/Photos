@@ -37,7 +37,7 @@ class FlickrFetchr {
                 var photos = photoResponse?.photos ?: mutableListOf()
 
                 photos = photos.filterNot {
-                    it.url.isBlank()
+                    it.getUrl().isBlank()
                 }
                 responseLiveData.value = photos
             }

@@ -84,7 +84,7 @@ class PhotosFragment : Fragment() {
             val placeHolder = ContextCompat.getDrawable(requireContext(), R.drawable.image) ?: ColorDrawable()
             holder.bindDrawable(placeHolder)
             // Передача целевой папки PhotoHolder, где будет размещено изображение и URL-адреса Photo для скачивания:
-            thumbnailDownloader.queueThumbnail(holder, photos[position].url)
+            thumbnailDownloader.queueThumbnail(holder, photos[position].getUrl())
         }
 
         override fun getItemCount() = photos.size
